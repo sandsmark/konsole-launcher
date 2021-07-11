@@ -38,13 +38,48 @@ int main(int argc, char *argv[])
 
     sd_bus_error_free(&error);
     sd_bus_message_unref(dbusRet);
-    sd_bus_unref(bus);
 
     // It isn't running, so launch it
     if (-ret == EHOSTUNREACH) {
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+        sd_bus_message *dbusRet = NULL;
+        ret = sd_bus_call_method(bus,
+                        "org.kde.klauncher5",              /* service to contact */
+                        "/KLauncher",             /* object path */
+                        "org.kde.KLauncher",  /* interface name */
+                        "start_service_by_desktop_name",                     /* method name */
+                        &error,                         /* object to return error in */
+                        &dbusRet,                       /* return message on success */
+
+                        // Argument types
+                        "s" // Service name
+                        "as" // urls
+                        "as" // envs
+                        "s" // startup_id
+                        "b", // blind
+
+                        // arguments
+                        "org.kde.konsole", // service_name
+                        0, // number of URLs
+                        0, // number of envs
+                        "", // startup_id
+                        0 // blind
+                        );
+        if (ret < 0) {
+            printf("Failed to contact klauncher: %s (%d: %s)\n", error.message, -ret, strerror(-ret));
+            sd_journal_print(LOG_ERR, "Failed to launch: %s (%d: %s)\n", error.message, -ret, strerror(-ret));
+        }
+        sd_bus_error_free(&error);
+        sd_bus_message_unref(dbusRet);
+    }
+
+    sd_bus_unref(bus);
+
+    if (ret != 1) {
+        // Even launching via klauncher failed, do it the old fashioned way
         return system("konsole");
     }
 
-    return -ret; /* systemd flips the sign */
+    return ret == 1 ? 0 : -ret; /* systemd flips the sign */
 }
 
