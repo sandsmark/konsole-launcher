@@ -1,6 +1,7 @@
 #include <systemd/sd-bus.h>
 #include <systemd/sd-journal.h>
 #include <errno.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
@@ -26,14 +27,19 @@ int main(int argc, char *argv[])
                     0             /* number of elements in a(rray), actually a map, describing unix-user */
                     );
 
-    if (ret < 0) {
-        printf("Failed to issue method call: %s (%s, %s)\n", error.message, strerror(errno), strerror(-ret));
+    if (ret < 0 && -ret != EHOSTUNREACH) {
+        printf("Failed to issue method call: %s (%s, %d: %s)\n", error.message, strerror(errno), -ret, strerror(-ret));
         sd_journal_print(LOG_ERR, "Failed to issue method call: %s (%s, %s)\n", error.message, strerror(errno), strerror(-ret));
     }
 
     sd_bus_error_free(&error);
     sd_bus_message_unref(dbusRet);
     sd_bus_unref(bus);
+
+    // It isn't running, so launch it
+    if (-ret == EHOSTUNREACH) {
+        return system("konsole");
+    }
 
     return -ret; /* systemd flips the sign */
 }
