@@ -2,6 +2,42 @@
 #include <systemd/sd-journal.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/resource.h>
+#include <unistd.h>
+
+static void launch(const char *command)
+{
+    const int pid = fork();
+    switch(pid) {
+    case 0: {
+        int maxfd = FD_SETSIZE;
+        struct rlimit rl;
+        if (getrlimit(RLIMIT_NOFILE, &rl) == 0) {
+            maxfd = rl.rlim_cur;
+        }
+        for (int fd = 3; fd < maxfd; ++fd) {
+            close(fd);
+        }
+
+        // SIGCHLD will not be reset after fork, unlike all other signals
+        signal(SIGCHLD, SIG_DFL);
+
+        const int ret = system(command);
+
+        if (ret != 0) {
+            perror("Launching failed");
+        }
+        exit(ret);
+        break;
+    }
+    case -1:
+        perror(" ! Error forking");
+        return;
+    default:
+        break;
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -77,7 +113,7 @@ int main(int argc, char *argv[])
 
     if (ret != 1) {
         // Even launching via klauncher failed, do it the old fashioned way
-        return system("konsole");
+        launch("konsole");
     }
 
     return ret == 1 ? 0 : -ret; /* systemd flips the sign */
