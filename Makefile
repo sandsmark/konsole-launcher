@@ -1,6 +1,6 @@
 LDFLAGS+=-lsystemd
 CFLAGS+=-Wall -Wextra -pedantic
-EXECUTABLE=konsole-launcher
+EXECUTABLE=launch-konsole
 all: $(EXECUTABLE)
 
 clean:
