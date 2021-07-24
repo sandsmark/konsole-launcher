@@ -5,3 +5,6 @@ all: $(EXECUTABLE)
 
 clean:
 	rm -f $(EXECUTABLE)
+
+install: $(EXECUTABLE)
+	install -D -m755 $(EXECUTABLE) $(DESTDIR)/usr/bin/$(EXECUTABLE)
