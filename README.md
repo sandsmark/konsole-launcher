@@ -14,3 +14,10 @@ Building
 
 `make`
 
+
+Installation
+------------
+
+`make install`
+
+`make install DESTDIR=/foo/` if you want a prefix (e. g. when packaging).
