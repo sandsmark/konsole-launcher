@@ -1,6 +1,8 @@
 konsole-launcher
 ----------------
 
+![logo](/logo.png)
+
 Very simple command line application to open new windows in Konsole as quickly as possible.
 
 Dependencies
